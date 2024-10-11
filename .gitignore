@@ -1,0 +1,14 @@
+*.pyc
+.coverage
+.eggs/
+.env
+/build/
+/config/
+coverage.xml
+dist/
+env/
+htmlcov/
+nosetests.xml
+octodns_*.egg-info/
+# config file for testing
+config.yml
