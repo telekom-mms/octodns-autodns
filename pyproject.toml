@@ -1,3 +1,80 @@
+[tool.poetry]
+name = "octodns-autodns"
+version = "0.0.1"
+description = " octodns Provider for AutoDNS by InternetX "
+readme = "README.md"
+authors = [
+    "Christoph Sieber <christoph.sieber@telekom.de>",
+    "Christopher Grau <c.grau@telekom.de>",
+    "Benjamin Böhm <Benjamin.Boehm@telekom.de>",
+    "Martin Neubert <Martin.Neubert@telekom.de>",
+]
+license = "MIT"
+homepage = "https://github.com/telekom-mms/octodns-autodns"
+repository = "https://github.com/telekom-mms/octodns-autodns"
+documentation = "https://github.com/telekom-mms/octodns-autodns"
+keywords = ["octodns", "autodns", "internetx", "dns"]
+
+[tool.poetry.dependencies]
+python = ">=3.9,<4.0"
+pyyaml = "6.0.2"
+dnspython = "2.7.0"
+fqdn = "1.5.1"
+idna = "3.10"
+natsort = "8.4.0"
+octodns = "1.10.0"
+python-dateutil = "2.9.0.post0"
+six = "1.16.0"
+
+[tool.poetry.group.dev.dependencies]
+pygments = "2.18.0"
+black = "24.10.0"
+build = "1.2.2.post1"
+certifi = "2024.8.30"
+cffi = "1.17.1"
+charset-normalizer = "3.3.2"
+click = "8.1.7"
+cmarkgfm = "2024.1.14"
+coverage = "7.6.1"
+docutils = "0.20.1"
+importlib-metadata = "8.5.0"
+iniconfig = "2.0.0"
+isort = "5.13.2"
+jaraco-classes = "3.4.0"
+jaraco-context = "6.0.1"
+jaraco-functools = "4.1.0"
+keyring = "25.4.1"
+markdown-it-py = "3.0.0"
+mdurl = "0.1.2"
+more-itertools = "10.5.0"
+mypy-extensions = "1.0.0"
+nh3 = "0.2.18"
+packaging = "24.1"
+pathspec = "0.12.1"
+pkginfo = "1.10.0"
+platformdirs = "4.3.6"
+pluggy = "1.5.0"
+pycparser = "2.22"
+pyflakes = "3.2.0"
+pyproject-hooks = "1.2.0"
+pytest-cov = "5.0.0"
+pytest = "8.3.3"
+pytest-network = "0.0.1"
+readme-renderer = "43.0"
+requests-toolbelt = "1.0.0"
+requests = "2.32.3"
+rfc3986 = "2.0.0"
+rich = "13.9.2"
+twine = "5.1.1"
+urllib3 = "2.2.3"
+zipp = "3.20.2"
+tox = "^4.21.2"
+flake8 = "^7.1.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.black]
 line-length=80
 skip-string-normalization=true

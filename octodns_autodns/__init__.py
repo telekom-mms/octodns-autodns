@@ -2,29 +2,34 @@
 # octodns provider for AutoDNS
 #
 
-from octodns.provider.base import BaseProvider
-from octodns.provider import ProviderException
-from octodns.record import Record
-from octodns.zone import Zone
-
 from collections import defaultdict
 from logging import getLogger
+
 from requests import Session
 from requests.auth import HTTPBasicAuth
+
+from octodns.provider import ProviderException
+from octodns.provider.base import BaseProvider
+from octodns.record import Record
+from octodns.zone import Zone
 
 # TODO: remove __VERSION__ with the next major version release
 __version__ = __VERSION__ = '0.0.1'
 
+
 class AutoDNSClientException(ProviderException):
     pass
+
 
 class AutoDNSClientNotFound(AutoDNSClientException):
     def __init__(self):
         super().__init__('Not Found')
 
+
 class AutoDNSClientUnauthorized(AutoDNSClientException):
     def __init__(self):
         super().__init__('Unauthorized')
+
 
 class AutoDNSClient(object):
     BASE_URL = 'https://api.autodns.com/v1'
@@ -77,8 +82,8 @@ class AutoDNSClient(object):
 
 class AutoDNSProvider(BaseProvider):
     SUPPORTS_GEO = False
-    #SUPPORTS_DYNAMIC = False
-    #SUPPORTS_ROOT_NS = True
+    # SUPPORTS_DYNAMIC = False
+    # SUPPORTS_ROOT_NS = True
     SUPPORTS = set(
         (
             'A',
@@ -92,31 +97,31 @@ class AutoDNSProvider(BaseProvider):
             'MX',
             'NS',
             'SRV',
-            'ALIAS'
+            'ALIAS',
         )
     )
 
     def __init__(
-            self,
-            id,
-            username,
-            password,
-            context,
-            system_name_server="a.ns14.net",
-            *args,
-            **kwargs
+        self,
+        id,
+        username,
+        password,
+        context,
+        system_name_server="a.ns14.net",
+        *args,
+        **kwargs,
     ):
         self.log = getLogger(f'AutoDNSProvider[{id}]')
-        self.log.debug(f"__init__: username={username}, password={password}, context={context}, system_name_server={system_name_server}")
+        self.log.debug(
+            f"__init__: username={username}, password={password}, context={context}, system_name_server={system_name_server}"
+        )
 
         super().__init__(id, *args, **kwargs)
 
         self.id = id
 
         sess = Session()
-        sess.headers.update({
-            "X-Domainrobot-Context": str(context),
-        })
+        sess.headers.update({"X-Domainrobot-Context": str(context)})
         sess.auth = HTTPBasicAuth(username, password)
 
         self.client = AutoDNSClient(sess, system_name_server)
@@ -145,7 +150,9 @@ class AutoDNSProvider(BaseProvider):
                     zone,
                     name,
                     {
-                        'ttl': record_data.get("ttl", zone_data["data"][0]["soa"]["ttl"]),
+                        'ttl': record_data.get(
+                            "ttl", zone_data["data"][0]["soa"]["ttl"]
+                        ),
                         'type': record_data["type"],
                         'value': record_data["value"],
                     },
