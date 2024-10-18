@@ -2,15 +2,16 @@
 # octodns provider for AutoDNS
 #
 
-from octodns.provider.base import BaseProvider
-from octodns.provider import ProviderException
-from octodns.record import Record
-from octodns.zone import Zone
-
 from collections import defaultdict
 from logging import getLogger
+
 from requests import Session
 from requests.auth import HTTPBasicAuth
+
+from octodns.provider import ProviderException
+from octodns.provider.base import BaseProvider
+from octodns.record import Record
+from octodns.zone import Zone
 
 # TODO: remove __VERSION__ with the next major version release
 __version__ = __VERSION__ = '0.0.1'
@@ -102,12 +103,12 @@ class AutoDNSProvider(BaseProvider):
             username,
             password,
             context,
-            system_name_server="a.ns14.net",
+            system_name_servers=["a.ns14.net","b.ns14.net","c.ns14.net","d.ns14.net"],
             *args,
             **kwargs
     ):
         self.log = getLogger(f'AutoDNSProvider[{id}]')
-        self.log.debug(f"__init__: username={username}, password={password}, context={context}, system_name_server={system_name_server}")
+        self.log.debug(f"__init__: username={username}, password={password}, context={context}, system_name_servers={system_name_servers}")
 
         super().__init__(id, *args, **kwargs)
 
@@ -119,16 +120,43 @@ class AutoDNSProvider(BaseProvider):
         })
         sess.auth = HTTPBasicAuth(username, password)
 
-        self.client = AutoDNSClient(sess, system_name_server)
+        self.client = AutoDNSClient(sess, system_name_servers[0])
+
+    def _data_for_MX(self, _type, records, default_ttl):
+        values = []
+        for record in records:
+            preference = record.get('pref')
+            value = record.get('value')
+            values.append(
+                {
+                    'preference': int(preference),
+                    'value': str(value),
+                }
+            )
+        return {
+            'ttl': record.get("ttl", default_ttl),
+            'type': _type,
+            'values': values,
+        }
+
+    def _data_for_A(self, _type, records, default_ttl):
+        values = []
+        for record in records:
+            values.append(record.get('value'))
+        return {
+            'ttl': record.get("ttl", default_ttl),
+            'type': _type,
+            'values': values
+        }
 
     def populate(self, zone: Zone, target=False, lenient=False):
         self.log.debug('populate: zone=%s', zone.name)
-        before = len(zone.records)
-
         values = defaultdict(lambda: defaultdict(list))
         zone_data = self.client.zone_get(zone.name)
-        for record in zone_data["data"][0]["resourceRecords"]:
 
+        default_ttl = zone_data["data"][0]["soa"]["ttl"]
+
+        for record in zone_data["data"][0]["resourceRecords"]:
             _type = record['type']
             if _type not in self.SUPPORTS:
                 self.log.warning(
@@ -140,15 +168,39 @@ class AutoDNSProvider(BaseProvider):
         for name, types in values.items():
             for _type, records in types.items():
                 print(_type, records)
-                record_data = records[0]
+
+                match _type:
+                    case 'MX':
+                        record_data = self._data_for_MX(_type, records, default_ttl)
+                    case 'A':
+                        record_data = self._data_for_A(_type, records, default_ttl)
+
+                # for record in records:
+                #     record_data = record
+
+                #     record_contents = {}
+
+                #     record_contents["ttl"] = record_data.get("ttl", zone_data["data"][0]["soa"]["ttl"])
+                #     record_contents["type"] = record_data.get('type')
+
+                #     if record_data.get('type') == 'MX':
+                #         record_contents['value'] = {}
+                #         record_contents['value']['preference'] = record_data.get('pref')
+                #         record_contents['value']['value'] = record_data.get('value')
+                #     elif record_data.get('type') == 'SRV':
+                #         record_contents['value'] = {}
+                #         record_contents['value']['priority'] = record_data.get('pref')
+                #         record_contents['value']['weight'] = record_data.get('value').split(' ')[0]
+                #         record_contents['value']['port'] = record_data.get('value').split(' ')[1]
+                #         record_contents['value']['target'] = record_data.get('value').split(' ')[2]
+                #     else:
+                #         record_contents["value"] = record_data.get('value')
+
+
                 record = Record.new(
                     zone,
                     name,
-                    {
-                        'ttl': record_data.get("ttl", zone_data["data"][0]["soa"]["ttl"]),
-                        'type': record_data["type"],
-                        'value': record_data["value"],
-                    },
+                    record_data,
                     source=self,
                     lenient=lenient,
                 )
