@@ -54,26 +54,12 @@ class AutoDNSClient(object):
         data = {'origin': origin, 'soa': soa, 'nameservers': nameservers}
         return self._do_json('POST', '/zone', data=data)['zone']
 
-    def zone_records_get(self, zone_id):
-        params = {'zone_id': zone_id}
-        records = self._do_json('GET', '/records', params=params)['records']
-        for record in records:
-            if record['name'] == '@':
-                record['name'] = ''
-        return records
-
-    def zone_record_create(self, zone_id, name, _type, value, ttl=None):
+    def zone_update_records(self, zone_name: str, records_add: list[dict], records_remove: list[dict]):
         data = {
-            'name': name or '@',
-            'ttl': ttl,
-            'type': _type,
-            'value': value,
-            'zone_id': zone_id,
+            'adds': records_add,
+            'rems': records_remove,
         }
-        self._do('POST', '/records', data=data)
-
-    def zone_record_delete(self, zone_id, record_id):
-        self._do('DELETE', f'/records/{record_id}')
+        return self._do_json('POST', f'/zone/{zone_name}/_stream', data=data)
 
 
 class AutoDNSProvider(BaseProvider):
@@ -139,7 +125,7 @@ class AutoDNSProvider(BaseProvider):
             'values': values,
         }
 
-    def _data_for_A(self, _type, records, default_ttl):
+    def _data_for_MULTI(self, _type, records, default_ttl):
         values = []
         for record in records:
             values.append(record.get('value'))
@@ -147,6 +133,35 @@ class AutoDNSProvider(BaseProvider):
             'ttl': record.get("ttl", default_ttl),
             'type': _type,
             'values': values
+        }
+
+    def _data_for_CNAME(self, _type, records, default_ttl):
+        record = records[0]
+        return {
+            'ttl': record.get("ttl", default_ttl),
+            'type': _type,
+            'value': record.get('value')
+        }
+
+    def _data_for_SRV(self, _type, records, default_ttl):
+        values = []
+        for record in records:
+            priority = record.get('pref')
+            weight = record.get('value').split(' ')[0]
+            port = record.get('value').split(' ')[1]
+            target = record.get('value').split(' ')[2]
+            values.append(
+                {
+                    'priority': priority,
+                    'weight': weight,
+                    'port': port,
+                    'target': target
+                }
+            )
+        return {
+            'ttl': record.get("ttl", default_ttl),
+            'type': _type,
+            'values': values,
         }
 
     def populate(self, zone: Zone, target=False, lenient=False):
@@ -172,30 +187,12 @@ class AutoDNSProvider(BaseProvider):
                 match _type:
                     case 'MX':
                         record_data = self._data_for_MX(_type, records, default_ttl)
-                    case 'A':
-                        record_data = self._data_for_A(_type, records, default_ttl)
-
-                # for record in records:
-                #     record_data = record
-
-                #     record_contents = {}
-
-                #     record_contents["ttl"] = record_data.get("ttl", zone_data["data"][0]["soa"]["ttl"])
-                #     record_contents["type"] = record_data.get('type')
-
-                #     if record_data.get('type') == 'MX':
-                #         record_contents['value'] = {}
-                #         record_contents['value']['preference'] = record_data.get('pref')
-                #         record_contents['value']['value'] = record_data.get('value')
-                #     elif record_data.get('type') == 'SRV':
-                #         record_contents['value'] = {}
-                #         record_contents['value']['priority'] = record_data.get('pref')
-                #         record_contents['value']['weight'] = record_data.get('value').split(' ')[0]
-                #         record_contents['value']['port'] = record_data.get('value').split(' ')[1]
-                #         record_contents['value']['target'] = record_data.get('value').split(' ')[2]
-                #     else:
-                #         record_contents["value"] = record_data.get('value')
-
+                    case 'SRV':
+                        record_data = self._data_for_SRV(_type, records, default_ttl)
+                    case 'CNAME':
+                        record_data = self._data_for_CNAME(_type, records, default_ttl)
+                    case _:
+                        record_data = self._data_for_MULTI(_type, records, default_ttl)
 
                 record = Record.new(
                     zone,
@@ -207,5 +204,100 @@ class AutoDNSProvider(BaseProvider):
                 zone.add_record(record, lenient=lenient)
 
         self.log.info(
-            'populate:   found %s records', len(zone.records) - before
+            'populate:   found %s records', len(zone.records)
         )
+
+
+    def _params_for_multiple(self, record):
+        for value in record.values:
+            yield {
+                'value': value,
+                'name': record.name,
+                'ttl': record.ttl,
+                'type': record._type,
+            }
+
+    _params_for_A = _params_for_multiple
+    _params_for_AAAA = _params_for_multiple
+
+    def _params_for_CAA(self, record):
+        for value in record.values:
+            data = f'{value.flags} {value.tag} "{value.value}"'
+            yield {
+                'value': data,
+                'name': record.name,
+                'ttl': record.ttl,
+                'type': record._type,
+            }
+
+    def _params_for_single(self, record):
+        yield {
+            'value': record.value,
+            'name': record.name,
+            'ttl': record.ttl,
+            'type': record._type,
+        }
+
+    _params_for_CNAME = _params_for_single
+
+    def _params_for_MX(self, record):
+        for value in record.values:
+            yield {
+                'value': value.exchange,
+                'name': record.name,
+                'ttl': record.ttl,
+                'type': record._type,
+                'pref': value.preference,
+            }
+
+    _params_for_NS = _params_for_multiple
+
+    def _params_for_SRV(self, record):
+        for value in record.values:
+            data = (
+                f'{value.weight} {value.port} {value.target}'
+            )
+            yield {
+                'value': data,
+                'name': record.name,
+                'ttl': record.ttl,
+                'type': record._type,
+                'pref': value.priority,
+            }
+
+    _params_for_TXT = _params_for_multiple
+
+    def _apply_Create(self, zone_name, change):
+        new = change.new
+        params_for = getattr(self, f'_params_for_{new._type}')
+
+        for params in params_for(new):
+            self.client.zone_update_records(zone_name, records_remove=[], records_add=[params])
+
+
+    def _apply_Update(self, zone_name, change):
+        # It's way simpler to delete-then-recreate than to update
+        self._apply_Delete(zone_name, change)
+        self._apply_Create(zone_name, change)
+
+
+    def _apply_Delete(self, zone_name, change):
+        existing = change.existing
+        zone = existing.zone
+
+        params_for = getattr(self, f'_params_for_{existing._type}')
+
+        for params in params_for(existing):
+            self.client.zone_update_records(zone_name, records_add=[], records_remove=[params])
+
+
+    def _apply(self, plan):
+        desired = plan.desired
+        changes = plan.changes
+        self.log.debug(
+            '_apply: zone=%s, len(changes)=%d', desired.name, len(changes)
+        )
+
+        for change in changes:
+            class_name = change.__class__.__name__
+            getattr(self, f'_apply_{class_name}')(desired.name, change)
