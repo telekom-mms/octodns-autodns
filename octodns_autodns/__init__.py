@@ -16,16 +16,20 @@ from octodns.zone import Zone
 # TODO: remove __VERSION__ with the next major version release
 __version__ = __VERSION__ = '0.0.1'
 
+
 class AutoDNSClientException(ProviderException):
     pass
+
 
 class AutoDNSClientNotFound(AutoDNSClientException):
     def __init__(self):
         super().__init__('Not Found')
 
+
 class AutoDNSClientUnauthorized(AutoDNSClientException):
     def __init__(self):
         super().__init__('Unauthorized')
+
 
 class AutoDNSClient(object):
     BASE_URL = 'https://api.autodns.com/v1'
@@ -64,8 +68,8 @@ class AutoDNSClient(object):
 
 class AutoDNSProvider(BaseProvider):
     SUPPORTS_GEO = False
-    #SUPPORTS_DYNAMIC = False
-    #SUPPORTS_ROOT_NS = True
+    # SUPPORTS_DYNAMIC = False
+    # SUPPORTS_ROOT_NS = True
     SUPPORTS = set(
         (
             'A',
@@ -79,7 +83,7 @@ class AutoDNSProvider(BaseProvider):
             'MX',
             'NS',
             'SRV',
-            'ALIAS'
+            'ALIAS',
         )
     )
 
@@ -101,9 +105,7 @@ class AutoDNSProvider(BaseProvider):
         self.id = id
 
         sess = Session()
-        sess.headers.update({
-            "X-Domainrobot-Context": str(context),
-        })
+        sess.headers.update({"X-Domainrobot-Context": str(context)})
         sess.auth = HTTPBasicAuth(username, password)
 
         self.client = AutoDNSClient(sess, system_name_servers[0])
