@@ -288,7 +288,6 @@ class AutoDNSProvider(BaseProvider):
 
     def _apply_Delete(self, zone_name, change):
         existing = change.existing
-        zone = existing.zone
 
         params_for = getattr(self, f'_params_for_{existing._type}')
 
