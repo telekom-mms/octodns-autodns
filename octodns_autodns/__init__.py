@@ -164,13 +164,6 @@ class AutoDNSProvider(BaseProvider):
         return {'ttl': _ttl, 'type': _type, 'values': values}
 
     def _data_for_single(self, _type, records, default_ttl):
-        try:
-            _ttl = records[0]["ttl"]
-        except KeyError:
-            _ttl = default_ttl
-        return {'ttl': _ttl, 'type': _type, 'value': records[0].get('value')}
-
-    def _data_for_cname(self, _type, records, default_ttl):
         record = records[0]
         try:
             _ttl = records[0]["ttl"]
@@ -335,16 +328,12 @@ class AutoDNSProvider(BaseProvider):
                         record_data = self._data_for_srv(
                             _type, records, default_ttl
                         )
-                    case 'CNAME':
-                        record_data = self._data_for_cname(
+                    case 'CNAME' | 'ALIAS':
+                        record_data = self._data_for_single(
                             _type, records, default_ttl
                         )
                     case 'CAA':
                         record_data = self._data_for_caa(
-                            _type, records, default_ttl
-                        )
-                    case 'ALIAS':
-                        record_data = self._data_for_single(
                             _type, records, default_ttl
                         )
                     case _:
