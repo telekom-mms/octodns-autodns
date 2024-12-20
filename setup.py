@@ -24,6 +24,7 @@ tests_require = (
     'pytest',
     'pytest-cov',
     'pytest-network',
+    'requests_mock',
     # TODO: other test-time requirements
 )
 
