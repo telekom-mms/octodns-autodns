@@ -16,29 +16,36 @@ from octodns.zone import Zone
 # TODO: remove __VERSION__ with the next major version release
 __version__ = __VERSION__ = '0.0.1'
 
+
 class AutoDNSClientException(ProviderException):
     """
     AutoDNSClientException for AutoDNSClientNotFound and AutoDNSClientUnauthorized
     """
 
+
 class AutoDNSClientNotFound(AutoDNSClientException):
     """
     AutoDNSClientNotFound if client not found
     """
+
     def __init__(self):
         super().__init__('Not Found')
+
 
 class AutoDNSClientUnauthorized(AutoDNSClientException):
     """
     AutoDNSClientUnauthorized if client is unauthorized
     """
+
     def __init__(self):
         super().__init__('Unauthorized')
+
 
 class AutoDNSClient(object):
     """
     AutoDNSClient main class
     """
+
     BASE_URL = 'https://api.autodns.com/v1'
 
     def __init__(self, session: Session, system_name_server: str):
@@ -75,14 +82,16 @@ class AutoDNSClient(object):
         data = {'origin': origin, 'soa': soa, 'nameservers': nameservers}
         return self._do_json('POST', '/zone', data=data)['zone']
 
-    def zone_update_records(self, zone_name: str, records_add: list[dict], records_remove: list[dict]):
+    def zone_update_records(
+        self,
+        zone_name: str,
+        records_add: list[dict],
+        records_remove: list[dict],
+    ):
         """
         Updates changed Records in an existing AutoDNS zone
         """
-        data = {
-            'adds': records_add,
-            'rems': records_remove,
-        }
+        data = {'adds': records_add, 'rems': records_remove}
         return self._do_json('POST', f'/zone/{zone_name}/_stream', data=data)
 
 
@@ -92,8 +101,8 @@ class AutoDNSProvider(BaseProvider):
     """
 
     SUPPORTS_GEO = False
-    #SUPPORTS_DYNAMIC = False
-    #SUPPORTS_ROOT_NS = True
+    # SUPPORTS_DYNAMIC = False
+    # SUPPORTS_ROOT_NS = True
     SUPPORTS = set(
         (
             'A',
@@ -107,32 +116,40 @@ class AutoDNSProvider(BaseProvider):
             'MX',
             'NS',
             'SRV',
-            'ALIAS'
+            'ALIAS',
         )
     )
 
     def __init__(
-            self,
-            id,
+        self,
+        id,
+        username,
+        password,
+        context,
+        *args,
+        system_name_servers=(
+            "a.ns14.net",
+            "b.ns14.net",
+            "c.ns14.net",
+            "d.ns14.net",
+        ),
+        **kwargs,
+    ):
+        self.log = getLogger(f'AutoDNSProvider[{id}]')
+        self.log.debug(
+            "__init__: username=%s, password=%s, context=%s, system_name_servers=%s",
             username,
             password,
             context,
-            *args,
-            system_name_servers=("a.ns14.net","b.ns14.net","c.ns14.net","d.ns14.net"),
-            **kwargs
-    ):
-        self.log = getLogger(f'AutoDNSProvider[{id}]')
-        self.log.debug("__init__: username=%s, password=%s, context=%s, system_name_servers=%s",
-                       username, password, context, system_name_servers)
+            system_name_servers,
+        )
 
         super().__init__(id, *args, **kwargs)
 
         self.id = id
 
         sess = Session()
-        sess.headers.update({
-            "X-Domainrobot-Context": str(context),
-        })
+        sess.headers.update({"X-Domainrobot-Context": str(context)})
         sess.auth = HTTPBasicAuth(username, password)
 
         self.client = AutoDNSClient(sess, system_name_servers[0])
@@ -142,21 +159,12 @@ class AutoDNSProvider(BaseProvider):
         for record in records:
             preference = record.get('pref')
             value = record.get('value')
-            values.append(
-                {
-                    'preference': int(preference),
-                    'value': str(value),
-                }
-            )
+            values.append({'preference': int(preference), 'value': str(value)})
         try:
             _ttl = records[0]["ttl"]
         except KeyError:
             _ttl = default_ttl
-        return {
-            'ttl': _ttl,
-            'type': _type,
-            'values': values,
-        }
+        return {'ttl': _ttl, 'type': _type, 'values': values}
 
     def _data_for_multi(self, _type, records, default_ttl):
         values = []
@@ -166,11 +174,7 @@ class AutoDNSProvider(BaseProvider):
             _ttl = records[0]["ttl"]
         except KeyError:
             _ttl = default_ttl
-        return {
-            'ttl': _ttl,
-            'type': _type,
-            'values': values
-        }
+        return {'ttl': _ttl, 'type': _type, 'values': values}
 
     def _data_for_cname(self, _type, records, default_ttl):
         record = records[0]
@@ -178,11 +182,7 @@ class AutoDNSProvider(BaseProvider):
             _ttl = records[0]["ttl"]
         except KeyError:
             _ttl = default_ttl
-        return {
-            'ttl': _ttl,
-            'type': _type,
-            'value': record.get('value')
-        }
+        return {'ttl': _ttl, 'type': _type, 'value': record.get('value')}
 
     def _data_for_srv(self, _type, records, default_ttl):
         values = []
@@ -196,7 +196,7 @@ class AutoDNSProvider(BaseProvider):
                     'priority': priority,
                     'weight': weight,
                     'port': port,
-                    'target': target
+                    'target': target,
                 }
             )
         try:
@@ -204,12 +204,7 @@ class AutoDNSProvider(BaseProvider):
         except KeyError:
             _ttl = default_ttl
 
-        return {
-            'ttl': _ttl,
-            'type': _type,
-            'values': values,
-        }
-
+        return {'ttl': _ttl, 'type': _type, 'values': values}
 
     def _params_for_multiple(self, record):
         for value in record.values:
@@ -257,9 +252,7 @@ class AutoDNSProvider(BaseProvider):
 
     def _params_for_srv(self, record):
         for value in record.values:
-            data = (
-                f'{value.weight} {value.port} {value.target}'
-            )
+            data = f'{value.weight} {value.port} {value.target}'
             yield {
                 'value': data,
                 'name': record.name,
@@ -275,14 +268,14 @@ class AutoDNSProvider(BaseProvider):
         params_for = getattr(self, f'_params_for_{new._type}')
 
         for params in params_for(new):
-            self.client.zone_update_records(zone_name, records_remove=[], records_add=[params])
-
+            self.client.zone_update_records(
+                zone_name, records_remove=[], records_add=[params]
+            )
 
     def _apply_update(self, zone_name, change):
         # It's way simpler to delete-then-recreate than to update
         self._apply_delete(zone_name, change)
         self._apply_create(zone_name, change)
-
 
     def _apply_delete(self, zone_name, change):
         existing = change.existing
@@ -290,8 +283,9 @@ class AutoDNSProvider(BaseProvider):
         params_for = getattr(self, f'_params_for_{existing._type}')
 
         for params in params_for(existing):
-            self.client.zone_update_records(zone_name, records_add=[], records_remove=[params])
-
+            self.client.zone_update_records(
+                zone_name, records_add=[], records_remove=[params]
+            )
 
     def _apply(self, plan):
         desired = plan.desired
@@ -326,23 +320,25 @@ class AutoDNSProvider(BaseProvider):
 
                 match _type:
                     case 'MX':
-                        record_data = self._data_for_mx(_type, records, default_ttl)
+                        record_data = self._data_for_mx(
+                            _type, records, default_ttl
+                        )
                     case 'SRV':
-                        record_data = self._data_for_srv(_type, records, default_ttl)
+                        record_data = self._data_for_srv(
+                            _type, records, default_ttl
+                        )
                     case 'CNAME':
-                        record_data = self._data_for_cname(_type, records, default_ttl)
+                        record_data = self._data_for_cname(
+                            _type, records, default_ttl
+                        )
                     case _:
-                        record_data = self._data_for_multi(_type, records, default_ttl)
+                        record_data = self._data_for_multi(
+                            _type, records, default_ttl
+                        )
 
                 record = Record.new(
-                    zone,
-                    name,
-                    record_data,
-                    source=self,
-                    lenient=lenient,
+                    zone, name, record_data, source=self, lenient=lenient
                 )
                 zone.add_record(record, lenient=lenient)
 
-        self.log.info(
-            'populate:   found %s records', len(zone.records)
-        )
+        self.log.info('populate:   found %s records', len(zone.records))
