@@ -1,0 +1,140 @@
+{
+	"stid": "20241220-app2-247586",
+	"status": {
+		"code": "S0205",
+		"text": "Zonen-Informationen wurden erfolgreich ermittelt.",
+		"type": "SUCCESS"
+	},
+	"object": {
+		"type": "Zone",
+		"value": "unit.tests"
+	},
+	"data": [
+		{
+			"created": "2017-03-09T11:13:35.000+0100",
+			"updated": "2024-12-20T13:38:14.000+0100",
+			"origin": "unit.tests",
+			"soa": {
+				"refresh": 43200,
+				"retry": 7200,
+				"expire": 1209600,
+				"ttl": 86400,
+				"email": "admin@example.com"
+			},
+			"nameServerGroup": "ns14.net",
+			"owner": {
+				"context": 4,
+				"user": "admin"
+			},
+			"updater": {
+				"context": 4,
+				"user": "admin"
+			},
+			"domainsafe": false,
+			"purgeType": "DISABLED",
+			"nameServers": [
+				{
+					"name": "a.ns14.net"
+				},
+				{
+					"name": "b.ns14.net"
+				},
+				{
+					"name": "c.ns14.net"
+				},
+				{
+					"name": "d.ns14.net"
+				}
+			],
+			"main": {
+				"address": "1.2.3.4"
+			},
+			"wwwInclude": false,
+			"virtualNameServer": "a.ns14.net",
+			"action": "COMPLETE",
+			"resourceRecords": [
+                {
+					"name": "example",
+					"ttl": 600,
+					"type": "A",
+					"value": "1.2.3.4"
+				},
+				{
+					"name": "mta",
+					"ttl": 600,
+					"type": "MX",
+					"value": "mta.unit.tests.",
+					"pref": 10
+				},
+				{
+					"name": "test-ns",
+					"ttl": 600,
+					"type": "NS",
+					"value": "a.unit-tests.net."
+				},
+				{
+					"name": "test-ns",
+					"ttl": 600,
+					"type": "NS",
+					"value": "b.unit-tests.net."
+				},
+				{
+					"name": "unit.test",
+					"ttl": 600,
+					"type": "CNAME",
+					"value": "www.unit.tests."
+				},
+				{
+					"name": "",
+					"ttl": 600,
+					"type": "CAA",
+					"value": "0 issue \"letsencrypt.org\""
+				},
+				{
+					"name": "",
+					"ttl": 600,
+					"type": "CAA",
+					"value": "0 issuewild \"letsencrypt.org\""
+				},
+				{
+					"name": "",
+					"ttl": 600,
+					"type": "CAA",
+					"value": "0 iodef \"mailto:webmaster@unit.tests\""
+				},
+				{
+					"name": "",
+					"ttl": 600,
+					"type": "TXT",
+					"value": "octodns autodns test"
+				},
+				{
+					"name": "",
+					"ttl": 600,
+					"type": "ALIAS",
+					"value": "unit.tests."
+				},
+				{
+					"name": "www",
+					"ttl": 600,
+					"type": "AAAA",
+					"value": "30f0:2e76:9b3f:45d9:d25e:058c:5243:3c98"
+				},
+				{
+					"name": "www",
+					"ttl": 600,
+					"type": "A",
+					"value": "1.2.3.4"
+				},
+				{
+					"name": "_srv._tcp",
+					"ttl": 600,
+					"type": "SRV",
+					"value": "10 8443 www.unit.tests.",
+					"pref": 20
+				}
+			],
+			"roid": 7196262
+		}
+	]
+}

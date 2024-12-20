@@ -1,0 +1,55 @@
+---
+? ''
+: - ttl: 600
+    type: ALIAS
+    value: unit.tests.
+  - ttl: 600
+    type: CAA
+    values:
+    - flags: 0
+      tag: iodef
+      value: '"mailto:webmaster@unit.tests"'
+    - flags: 0
+      tag: issue
+      value: '"letsencrypt.org"'
+    - flags: 0
+      tag: issuewild
+      value: '"letsencrypt.org"'
+  - ttl: 600
+    type: TXT
+    value: octodns autodns test
+_srv._tcp:
+  ttl: 600
+  type: SRV
+  value:
+    port: 8443
+    priority: 20
+    target: www.unit.tests.
+    weight: 10
+example:
+  ttl: 600
+  type: A
+  value: 1.2.3.4
+mta:
+  ttl: 600
+  type: MX
+  value:
+    exchange: mta.unit.tests.
+    preference: 10
+test-ns:
+  ttl: 600
+  type: NS
+  values:
+  - a.unit-tests.net.
+  - b.unit-tests.net.
+unit.test:
+  ttl: 600
+  type: CNAME
+  value: www.unit.tests.
+www:
+- ttl: 600
+  type: A
+  value: 1.2.3.4
+- ttl: 600
+  type: AAAA
+  value: 30f0:2e76:9b3f:45d9:d25e:58c:5243:3c98

@@ -104,20 +104,7 @@ class AutoDNSProvider(BaseProvider):
     # SUPPORTS_DYNAMIC = False
     # SUPPORTS_ROOT_NS = True
     SUPPORTS = set(
-        (
-            'A',
-            'AAAA',
-            'CAA',
-            'HINFO',
-            'NAPTR',
-            'PTR',
-            'TXT',
-            'CNAME',
-            'MX',
-            'NS',
-            'SRV',
-            'ALIAS',
-        )
+        ('A', 'AAAA', 'CAA', 'TXT', 'CNAME', 'MX', 'NS', 'SRV', 'ALIAS')
     )
 
     def __init__(
@@ -176,7 +163,7 @@ class AutoDNSProvider(BaseProvider):
             _ttl = default_ttl
         return {'ttl': _ttl, 'type': _type, 'values': values}
 
-    def _data_for_cname(self, _type, records, default_ttl):
+    def _data_for_single(self, _type, records, default_ttl):
         record = records[0]
         try:
             _ttl = records[0]["ttl"]
@@ -199,6 +186,20 @@ class AutoDNSProvider(BaseProvider):
                     'target': target,
                 }
             )
+        try:
+            _ttl = records[0]["ttl"]
+        except KeyError:
+            _ttl = default_ttl
+
+        return {'ttl': _ttl, 'type': _type, 'values': values}
+
+    def _data_for_caa(self, _type, records, default_ttl):
+        values = []
+        for record in records:
+            flags = record.get('value').split(' ')[0]
+            tag = record.get('value').split(' ')[1]
+            value = record.get('value').split(' ')[2]
+            values.append({'flags': flags, 'tag': tag, 'value': value})
         try:
             _ttl = records[0]["ttl"]
         except KeyError:
@@ -327,8 +328,12 @@ class AutoDNSProvider(BaseProvider):
                         record_data = self._data_for_srv(
                             _type, records, default_ttl
                         )
-                    case 'CNAME':
-                        record_data = self._data_for_cname(
+                    case 'CNAME' | 'ALIAS':
+                        record_data = self._data_for_single(
+                            _type, records, default_ttl
+                        )
+                    case 'CAA':
+                        record_data = self._data_for_caa(
                             _type, records, default_ttl
                         )
                     case _:
