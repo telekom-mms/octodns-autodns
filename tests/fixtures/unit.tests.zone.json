@@ -18,7 +18,7 @@
 				"refresh": 43200,
 				"retry": 7200,
 				"expire": 1209600,
-				"ttl": 86400,
+				"ttl": 3600,
 				"email": "admin@example.com"
 			},
 			"nameServerGroup": "ns14.net",
@@ -53,15 +53,26 @@
 			"virtualNameServer": "a.ns14.net",
 			"action": "COMPLETE",
 			"resourceRecords": [
-                {
+				{
 					"name": "example",
 					"ttl": 600,
 					"type": "A",
 					"value": "1.2.3.4"
 				},
 				{
+					"name": "example2",
+					"type": "A",
+					"value": "1.2.3.4"
+				},
+				{
 					"name": "mta",
 					"ttl": 600,
+					"type": "MX",
+					"value": "mta.unit.tests.",
+					"pref": 10
+				},
+				{
+					"name": "mta2",
 					"type": "MX",
 					"value": "mta.unit.tests.",
 					"pref": 10
@@ -81,6 +92,11 @@
 				{
 					"name": "unit.test",
 					"ttl": 600,
+					"type": "CNAME",
+					"value": "www.unit.tests."
+				},
+				{
+					"name": "unit2.test",
 					"type": "CNAME",
 					"value": "www.unit.tests."
 				},
@@ -118,7 +134,7 @@
 					"name": "www",
 					"ttl": 600,
 					"type": "AAAA",
-					"value": "30f0:2e76:9b3f:45d9:d25e:058c:5243:3c98"
+					"value": "30f0:2e76:9b3f:45d9:d25e:58c:5243:3c98"
 				},
 				{
 					"name": "www",
@@ -127,11 +143,38 @@
 					"value": "1.2.3.4"
 				},
 				{
+					"name": "www",
+					"ttl": 600,
+					"type": "BLA",
+					"value": "1.2.3.4"
+				},
+				{
 					"name": "_srv._tcp",
 					"ttl": 600,
 					"type": "SRV",
 					"value": "10 8443 www.unit.tests.",
 					"pref": 20
+				},
+				{
+					"name": "_srv2._tcp",
+					"type": "SRV",
+					"value": "10 8443 www.unit.tests.",
+					"pref": 20
+				},
+				{
+					"name": "test2",
+					"type": "CAA",
+					"value": "0 issue \"letsencrypt.org\""
+				},
+				{
+					"name": "test2",
+					"type": "CAA",
+					"value": "0 issuewild \"letsencrypt.org\""
+				},
+				{
+					"name": "test2",
+					"type": "CAA",
+					"value": "0 iodef \"mailto:webmaster@unit.tests\""
 				}
 			],
 			"roid": 7196262

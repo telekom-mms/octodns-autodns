@@ -8,16 +8,24 @@
     values:
     - flags: 0
       tag: iodef
-      value: '"mailto:webmaster@unit.tests"'
+      value: mailto:webmaster@unit.tests
     - flags: 0
       tag: issue
-      value: '"letsencrypt.org"'
+      value: letsencrypt.org
     - flags: 0
       tag: issuewild
-      value: '"letsencrypt.org"'
+      value: letsencrypt.org
   - ttl: 600
     type: TXT
     value: octodns autodns test
+
+_srv2._tcp:
+  type: SRV
+  value:
+    port: 8443
+    priority: 20
+    target: www.unit.tests.
+    weight: 10
 _srv._tcp:
   ttl: 600
   type: SRV
@@ -30,18 +38,41 @@ example:
   ttl: 600
   type: A
   value: 1.2.3.4
+example2:
+  type: A
+  value: 1.2.3.4
 mta:
   ttl: 600
   type: MX
   value:
     exchange: mta.unit.tests.
     preference: 10
+mta2:
+  type: MX
+  value:
+    exchange: mta.unit.tests.
+    preference: 10
+test2:
+  - type: CAA
+    values:
+    - flags: 0
+      tag: iodef
+      value: mailto:webmaster@unit.tests
+    - flags: 0
+      tag: issue
+      value: letsencrypt.org
+    - flags: 0
+      tag: issuewild
+      value: letsencrypt.org
 test-ns:
   ttl: 600
   type: NS
   values:
   - a.unit-tests.net.
   - b.unit-tests.net.
+unit2.test:
+  type: CNAME
+  value: www.unit.tests.
 unit.test:
   ttl: 600
   type: CNAME
