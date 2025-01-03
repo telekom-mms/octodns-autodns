@@ -20,16 +20,11 @@ def version():
 
 description, long_description = descriptions()
 
-tests_require = (
-    'pytest',
-    'pytest-cov',
-    'pytest-network',
-    # TODO: other test-time requirements
-)
+tests_require = ('pytest', 'pytest-cov', 'pytest-network', 'requests_mock')
 
 setup(
-    author='Christoph Sieber',
-    author_email='christoph.sieber@telekom.de',
+    author='Christoph Sieber, Martin Neubert, Martin Schurz, Christopher Grau',
+    author_email='christoph.sieber@telekom.de, martin.neubert@telekom.de, martin.schurz@telekom.de, c.grau@telekom.de',
     description=description,
     extras_require={
         'dev': tests_require
@@ -47,10 +42,7 @@ setup(
         ),
         'test': tests_require,
     },
-    install_requires=(
-        'octodns>=1.0.0',
-        # TODO: other requirements
-    ),
+    install_requires=('octodns>=1.0.0', 'requests>=2.32.3'),
     license='MIT',
     long_description=long_description,
     long_description_content_type='text/markdown',
